@@ -68,10 +68,9 @@ export const encode = async (
   const lut = getLUT(img.width * img.height, password);
   bytes.forEach((byte) => {
     for (let i = 0; i < 4; i++) {
-      const index = lut(pixel);
-      pixels.data[index] = (pixels.data[index] & ~3) | ((byte >> (i * 2)) & 3);
-      pixel++;
+      const index = lut(pixel++);
       if (pixel % 4 == 3) pixel++;
+      pixels.data[index] = (pixels.data[index] & ~3) | ((byte >> (i * 2)) & 3);
     }
   });
   ctx.putImageData(pixels, 0, 0);
