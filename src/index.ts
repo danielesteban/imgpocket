@@ -1,8 +1,20 @@
 import { deflate, inflate, strFromU8, strToU8 } from 'fflate';
+import seedrandom from 'seedrandom';
 
-const loadImage = async (image: Blob | HTMLImageElement | string): Promise<HTMLImageElement> => {
-  let img: HTMLImageElement;
-  if (image instanceof HTMLImageElement) {
+const getLUT = (length: number, password: string) => {
+  if (!password) {
+    return (i: number) => i;
+  }
+  const rng = seedrandom(password);
+  const lut = Array.from({ length }, (_, i) => i).sort(() => rng() - 0.5);
+  return (i: number) => lut[i];
+};
+
+type Image = Blob | HTMLCanvasElement | HTMLImageElement | string;
+
+const loadImage = async (image: Image): Promise<HTMLCanvasElement | HTMLImageElement> => {
+  let img: HTMLCanvasElement | HTMLImageElement;
+  if (image instanceof HTMLCanvasElement || image instanceof HTMLImageElement) {
     img = image;
   } else if (image instanceof Blob || typeof image === 'string') {
     const url = image instanceof Blob ? URL.createObjectURL(image) : image;
@@ -25,11 +37,16 @@ const loadImage = async (image: Blob | HTMLImageElement | string): Promise<HTMLI
   return img;
 };
 
-export const encode = async (image: Blob | HTMLImageElement | string, data: Uint8Array, output: HTMLCanvasElement = document.createElement('canvas')): Promise<HTMLCanvasElement> => {
+export const encode = async (
+  image: Image,
+  data: Uint8Array,
+  password: string = '',
+  canvas: HTMLCanvasElement = document.createElement('canvas')
+): Promise<HTMLCanvasElement> => {
   const img = await loadImage(image);
-  output.width = img.width;
-  output.height = img.height;
-  const ctx = output.getContext('2d')!;
+  canvas.width = img.width;
+  canvas.height = img.height;
+  const ctx = canvas.getContext('2d')!;
   ctx.drawImage(img, 0, 0);
   const pixels = ctx.getImageData(0, 0, img.width, img.height);
 
@@ -48,41 +65,55 @@ export const encode = async (image: Blob | HTMLImageElement | string, data: Uint
   }
 
   let pixel = 0;
+  const lut = getLUT(img.width * img.height, password);
   bytes.forEach((byte) => {
     for (let i = 0; i < 4; i++) {
-      pixels.data[pixel] = (pixels.data[pixel] & ~3) | ((byte >> (i * 2)) & 3);
+      const index = lut(pixel);
+      pixels.data[index] = (pixels.data[index] & ~3) | ((byte >> (i * 2)) & 3);
       pixel++;
       if (pixel % 4 == 3) pixel++;
     }
   });
   ctx.putImageData(pixels, 0, 0);
 
-  return output;
+  return canvas;
 };
 
-export const encodeString = (image: Blob | HTMLImageElement | string, data: string, output?: HTMLCanvasElement): Promise<HTMLCanvasElement> => (
-  encode(image, strToU8(data), output)
+export const encodeString = (
+  image: Image,
+  data: string,
+  password?: string,
+  canvas?: HTMLCanvasElement
+): Promise<HTMLCanvasElement> => (
+  encode(image, strToU8(data), password, canvas)
 );
 
-export const decode = async (image: Blob | HTMLImageElement | string): Promise<Uint8Array> => {
+export const decode = async (
+  image: Image,
+  password: string = '',
+  canvas: HTMLCanvasElement = document.createElement('canvas')
+): Promise<Uint8Array> => {
   const img = await loadImage(image);
-  const canvas = document.createElement('canvas');
   canvas.width = img.width;
   canvas.height = img.height;
   const ctx = canvas.getContext('2d')!;
   ctx.drawImage(img, 0, 0);
   const pixels = ctx.getImageData(0, 0, img.width, img.height).data;
-  
+
   let pixel = 0;
+  const lut = getLUT(img.width * img.height, password);
   const getByte = () => {
     let byte = 0;
     for (let i = 0; i < 4; i++) {
-      byte |= (pixels[pixel++] & 3) << (i * 2);
+      byte |= (pixels[lut(pixel++)] & 3) << (i * 2);
       if (pixel % 4 == 3) pixel++;
     }
     return byte;
   };
   const length = (new Uint32Array((new Uint8Array([getByte(), getByte(), getByte(), getByte()])).buffer))[0];
+  if (pixels.length / 4 < (length + 4) * 8 / 6) {
+    throw new Error("Couldn't decode data.");
+  }
   const deflated = new Uint8Array(length);
   for (let i = 0; i < length; i++) {
     deflated[i] = getByte();
@@ -94,8 +125,12 @@ export const decode = async (image: Blob | HTMLImageElement | string): Promise<U
   }));
 };
 
-export const decodeString = async (image: Blob | HTMLImageElement | string): Promise<string> => (
-  strFromU8(await decode(image))
+export const decodeString = async (
+  image: Blob | HTMLImageElement | string,
+  password?: string,
+  canvas?: HTMLCanvasElement
+): Promise<string> => (
+  strFromU8(await decode(image, password, canvas))
 );
 
 export default { encode, encodeString, decode, decodeString };

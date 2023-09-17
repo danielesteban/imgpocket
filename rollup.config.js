@@ -10,7 +10,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const outputPath = path.resolve(__dirname, 'dist');
 
 export default {
-  external: ['fflate'],
+  external: ['fflate', 'seedrandom'],
   input: path.join(__dirname, 'src'),
   output: {
     file: path.join(outputPath, 'imgpocket.js'),
@@ -38,12 +38,13 @@ export default {
           types: './types',
           peerDependencies: {
             fflate: '>=0.8.0',
+            seedrandom: '>=3.0.5',
           },
           repository: {
             type: 'git',
             url: 'https://github.com/danielesteban/imgpocket',
           },
-          version: '0.0.3',
+          version: '0.0.4',
         }, null, '  '));
       },
     },
