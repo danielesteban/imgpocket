@@ -10,6 +10,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const outputPath = path.resolve(__dirname, 'dist');
 
 export default {
+  external: ['fflate'],
   input: path.join(__dirname, 'src'),
   output: {
     file: path.join(outputPath, 'imgpocket.js'),
@@ -31,18 +32,18 @@ export default {
         fs.writeFileSync(path.join(outputPath, 'package.json'), JSON.stringify({
           name: 'imgpocket',
           author: 'Daniel Esteban Nombela',
-          dependencies: {
-            fflate: '^0.8.0',
-          },
           license: 'MIT',
           module: './imgpocket.js',
           type: 'module',
           types: './types',
+          peerDependencies: {
+            fflate: '>=0.8.0',
+          },
           repository: {
             type: 'git',
             url: 'https://github.com/danielesteban/imgpocket',
           },
-          version: '0.0.2',
+          version: '0.0.3',
         }, null, '  '));
       },
     },
