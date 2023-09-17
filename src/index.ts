@@ -75,7 +75,7 @@ export const encode = async (
   bytes.forEach((byte) => {
     for (let i = 0; i < 4; i++) {
       const index = lut(pixel++);
-      if (pixel % 4 == 3) pixel++;
+      if (pixel % 4 === 3) pixel++;
       pixels.data[index] = (pixels.data[index] & ~3) | ((byte >> (i * 2)) & 3);
     }
   });
@@ -111,7 +111,7 @@ export const decode = async (
     let byte = 0;
     for (let i = 0; i < 4; i++) {
       byte |= (pixels[lut(pixel++)] & 3) << (i * 2);
-      if (pixel % 4 == 3) pixel++;
+      if (pixel % 4 === 3) pixel++;
     }
     return byte;
   };
