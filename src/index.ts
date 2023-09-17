@@ -6,14 +6,15 @@ const getLUT = (length: number, password: string) => {
     return (i: number) => i;
   }
   const rng = seedrandom(password);
-  const lut = Array.from({ length }, (_, i) => i);
+  const lut = (length > 65535 ? Uint32Array : Uint16Array)
+    .from({ length } as any, (_, i) => i);
   for (let i = length - 1; i > 0; i--) {
     const r = Math.floor(rng() * i);
     const t = lut[i];
     lut[i] = lut[r];
     lut[r] = t;
   }
-  return (i: number) => lut[Math.floor(i / 4)] + i % 4;
+  return (i: number) => lut[Math.floor(i / 4)] + Math.floor(i % 4);
 };
 
 type Image = Blob | HTMLCanvasElement | HTMLImageElement | string;
