@@ -44,7 +44,7 @@ export default {
             type: 'git',
             url: 'https://github.com/danielesteban/imgpocket',
           },
-          version: '0.0.4',
+          version: '0.0.5',
         }, null, '  '));
       },
     },

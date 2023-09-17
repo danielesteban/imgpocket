@@ -7,7 +7,7 @@ const getLUT = (length: number, password: string) => {
   }
   const rng = seedrandom(password);
   const lut = Array.from({ length }, (_, i) => i).sort(() => rng() - 0.5);
-  return (i: number) => lut[i];
+  return (i: number) => lut[Math.floor(i / 4)] + i % 4;
 };
 
 type Image = Blob | HTMLCanvasElement | HTMLImageElement | string;
