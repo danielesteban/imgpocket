@@ -6,7 +6,13 @@ const getLUT = (length: number, password: string) => {
     return (i: number) => i;
   }
   const rng = seedrandom(password);
-  const lut = Array.from({ length }, (_, i) => i).sort(() => rng() - 0.5);
+  const lut = Array.from({ length }, (_, i) => i);
+  for (let i = length - 1; i > 0; i--) {
+    const r = Math.floor(rng() * i);
+    const t = lut[i];
+    lut[i] = lut[r];
+    lut[r] = t;
+  }
   return (i: number) => lut[Math.floor(i / 4)] + i % 4;
 };
 
