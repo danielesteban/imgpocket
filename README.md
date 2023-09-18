@@ -1,4 +1,5 @@
 imgpocket
+[![npm-version](https://img.shields.io/npm/v/imgpocket.svg)](https://www.npmjs.com/package/imgpocket)
 ==
 
 > Encode/Decode magic data pockets inside images
