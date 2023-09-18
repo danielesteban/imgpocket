@@ -14,7 +14,7 @@ const getLUT = (length: number, password: string) => {
     lut[i] = lut[r];
     lut[r] = t;
   }
-  return (i: number) => lut[Math.floor(i / 4)] * 4 + Math.floor(i % 4);
+  return (i: number) => lut[Math.floor(i / 4)] * 4 + (i % 4);
 };
 
 type Image = Blob | HTMLCanvasElement | HTMLImageElement | string;
@@ -132,7 +132,7 @@ export const decode = async (
 };
 
 export const decodeString = async (
-  image: Blob | HTMLImageElement | string,
+  image: Image,
   password?: string,
   canvas?: HTMLCanvasElement
 ): Promise<string> => (
